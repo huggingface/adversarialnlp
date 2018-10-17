@@ -11,6 +11,7 @@ from allennlp.common.util import get_spacy_model
 from allennlp.models.archival import load_archive
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.pretrained import span_based_constituency_parsing_with_elmo_joshi_2018
+from allennlp.data.tokenizers.word_splitter import SpacyWordSplitter
 
 from adversarialnlp.seeds.seeds_generator import SeedsGenerator
 
@@ -33,7 +34,8 @@ class SwagSeeds(SeedsGenerator):
                  dataset_reader: DatasetReader,
                  num_seeds: int = 10) -> None:
         super().__init__(dataset_reader)
-        self.spacy_model = get_spacy_model("en_core_web_sm", pos_tags=True, parse=False, ner=False)
+        # self.spacy_model = get_spacy_model("en_core_web_sm", pos_tags=True, parse=False, ner=False)
+        self._tokenizer = SpacyWordSplitter(language='en_core_web_sm', pos_tags=True)
         self.constituency_predictor = span_based_constituency_parsing_with_elmo_joshi_2018()
         self.num_seeds = num_seeds
 

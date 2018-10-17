@@ -1,3 +1,1 @@
-from .generators import Generator
-from .pruners import Pruner
-from .adversarial import Adversarial
+from adversarialnlp.version import VERSION as __version__
