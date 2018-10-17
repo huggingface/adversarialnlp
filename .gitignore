@@ -1,1 +1,38 @@
+# build artifacts
+
+.eggs/
+.mypy_cache
+adversarialnlp.egg-info/
+build/
+dist/
+
+
+# dev tools
+
+.envrc
+.python-version
+
+
+# jupyter notebooks
+
+.ipynb_checkpoints
+
+
+# miscellaneous
+
+.cache/
+.vscode/
+doc/_build/
+
+
+# python
+
 *.pyc
+*.pyo
+__pycache__
+
+
+# testing and continuous integration
+
+.coverage
+.pytest_cache/
