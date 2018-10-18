@@ -21,7 +21,6 @@ dist/
 # miscellaneous
 
 .cache/
-.vscode/
 doc/_build/
 
 
