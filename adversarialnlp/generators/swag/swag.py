@@ -163,7 +163,7 @@ for (instance, s1_toks, s2_toks, item) in tqdm(stories_tokenized):
     result_dict = model(model.batch_to_ids(full_sents), use_forward=False, use_reverse=True, compute_logprobs=True)
     ending_lengths = (fwd_scores < 0).sum(1)
     ending_lengths_float = ending_lengths.astype(np.float32)
-    rev_scores = result_dict['reverse_logprobs'].data.cpu().numpy()
+    rev_scores = result_dict['reverse_logprobs'].cpu().detach().numpy()
 
     forward_logperp_ending = -fwd_scores.sum(1) / ending_lengths_float
     reverse_logperp_ending = -rev_scores[:, context_len:].sum(1) / ending_lengths_float

@@ -2,10 +2,10 @@ from typing import Dict
 import json
 import logging
 import re
+from itertools import tee
 from overrides import overrides
 from unidecode import unidecode
 from num2words import num2words
-from itertools import tee
 
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader

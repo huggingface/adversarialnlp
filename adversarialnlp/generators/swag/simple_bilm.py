@@ -172,24 +172,24 @@ class SimpleBiLM(torch.nn.Module):
         self.embedding_dropout_probability = embedding_dropout_probability
 
     def embed_words(self, words):
-        assert words.dim() == 2
-        if not self.training:
-            return F.embedding(words, self.decoder.weight)
+        # assert words.dim() == 2
+        return F.embedding(words, self.decoder.weight)
+        # if not self.training:
+        #       return F.embedding(words, self.decoder.weight)
         # Embedding dropout
-        vocab_size = self.decoder.weight.size(0)
-        mask = Variable(
-            self.decoder.weight.data.new(vocab_size, 1).bernoulli_(1 - self.embedding_dropout_probability).expand_as(
-                self.decoder.weight) / (1 - self.embedding_dropout_probability))
+        # vocab_size = self.decoder.weight.size(0)
+        # mask = Variable(
+        #     self.decoder.weight.data.new(vocab_size, 1).bernoulli_(1 - self.embedding_dropout_probability).expand_as(
+        #         self.decoder.weight) / (1 - self.embedding_dropout_probability))
 
-        padding_idx = 0
-        embeds = self.decoder._backend.Embedding.apply(words, mask * self.decoder.weight, padding_idx, None,
-                                                       2, False, False)
-        return embeds
+        # padding_idx = 0
+        # embeds = self.decoder._backend.Embedding.apply(words, mask * self.decoder.weight, padding_idx, None,
+        #                                                2, False, False)
+        # return embeds
 
     def timestep_to_ids(self, timestep_tokenized: List[str]):
         """ Just a single timestep (so dont add BOS or EOS"""
-        return Variable(torch.LongTensor([self.vocab.get_token_index(x) for x in timestep_tokenized])[:, None],
-                        volatile=not self.training).cuda(async=True)
+        return torch.tensor([self.vocab.get_token_index(x) for x in timestep_tokenized])[:, None]
 
     def batch_to_ids(self, stories_tokenized: List[List[str]]):
         """
@@ -203,8 +203,7 @@ class SimpleBiLM(torch.nn.Module):
                                     'tokens': SingleIdTokenIndexer(namespace='tokens', lowercase_tokens=True)})})
             for story in stories_tokenized])
         batch.index_instances(self.vocab)
-        words = {k: v['tokens'] for k, v in batch.as_tensor_dict(for_training=self.training).items()}['story'].cuda(
-            async=True)
+        words = {k: v['tokens'] for k, v in batch.as_tensor_dict().items()}['story']
         return words
 
     def conditional_generation(self, context, gt_completion, batch_size=128, max_gen_length=25,
@@ -225,7 +224,7 @@ class SimpleBiLM(torch.nn.Module):
         self.forward_lm._states = tuple(x.repeat(1, batch_size, 1).contiguous() for x in self.forward_lm._states)
         # Each item will be (token, score)
         generations = [[(context[-1], 0.0)] for i in range(batch_size)]
-        mask = Variable(forward_logprobs.data.new(batch_size).long().fill_(1))
+        mask = forward_logprobs.new(batch_size).long().fill_(1)
 
         gt_completion_padded = [self.vocab.get_token_index(gt_token) for gt_token in
                                 [x.lower() for x in gt_completion] + ['@@PADDING@@'] * (
@@ -233,7 +232,7 @@ class SimpleBiLM(torch.nn.Module):
 
         for index, gt_token_ind in enumerate(gt_completion_padded):
             embeds = self.embed_words(self.timestep_to_ids([gen[-1][0] for gen in generations]))
-            next_dists = F.softmax(self.decoder(self.forward_lm(embeds, mask[:, None]))[:, 0], 1).data
+            next_dists = F.softmax(self.decoder(self.forward_lm(embeds, mask[:, None]))[:, 0], dim=1)
 
             # Perform hacky stuff on the distribution (disallowing BOS, EOS, that sorta thing
             sampling_probs = next_dists.clone()
@@ -257,9 +256,9 @@ class SimpleBiLM(torch.nn.Module):
                                      torch.arange(0, next_dists.size(0),
                                                   out=mask.data.new(next_dists.size(0))),
                                      next_preds,
-                                 ].cpu().numpy())
+                                 ].cpu().detach().numpy())
             for i, (gen_list, pred_id, score_i, mask_i) in enumerate(
-                    zip(generations, next_preds.cpu().numpy(), next_scores, mask.data.cpu().numpy())):
+                    zip(generations, next_preds.cpu().detach().numpy(), next_scores, mask.data.cpu().detach().numpy())):
                 if mask_i:
                     gen_list.append((self.vocab.get_token_from_index(pred_id), score_i))
             is_eos = (next_preds[:, None] == self.eos_tokens[None]).max(1)[0]
@@ -272,7 +271,7 @@ class SimpleBiLM(torch.nn.Module):
                 generation_scores[i, j] = v
 
         generation_toks, idx = _de_duplicate_generations([[tok for (tok, score) in gen[1:]] for gen in generations])
-        return generation_toks, generation_scores[idx], forward_logprobs.data.cpu().numpy()
+        return generation_toks, generation_scores[idx], forward_logprobs.cpu().detach().numpy()
 
     def _chunked_logsoftmaxes(self, activation, word_targets, chunk_size=256):
         """
