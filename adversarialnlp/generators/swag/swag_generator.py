@@ -42,7 +42,6 @@ class SwagGenerator(Generator):
         self.constituency_predictor: Predictor = span_based_constituency_parsing_with_elmo_joshi_2018()
         # self.language_model: Model = ElmoLstm()
         archive = load_archive('https://s3-us-west-2.amazonaws.com/allennlp/models/bimpm-quora-2018.08.17.tar.gz')
-        # https://s3-us-west-2.amazonaws.com/allennlp/datasets/quora-question-paraphrase/test.tsv')
         vocab = archive.model.vocab
         self.language_model: Model = SimpleBiLM(vocab=vocab)
         # self.iterator = BasicIterator(batch_size=1)

@@ -1,1 +1,0 @@
-from .activitynet_captions import ActivityNetCaptionsDatasetReader
