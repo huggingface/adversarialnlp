@@ -1,6 +1,6 @@
 # AdversarialNLP - WIP
 
-AdversarialNLP is a generic library for crafting and using Adversarial NLP examples built on AllenNLP and PyTorch.
+AdversarialNLP is a generic library for crafting and using Adversarial NLP examples.
 
 Work in Progress
 

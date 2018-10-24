@@ -60,5 +60,5 @@ class TestSwagGenerator():
         # instances = [tuple(instance.detach().cpu().numpy())
         #                 for batch in batches
         #                 for instance in batch['text']["tokens"]]
-        # assert len(instances) == 5
+        assert len(batches) == 5
         # self.assert_instances_are_correct(instances)

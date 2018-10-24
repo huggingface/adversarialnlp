@@ -18,9 +18,9 @@ import shutil
 import requests
 
 MODULE_ROOT = pathlib.Path(__file__).parent.parent
-FIXTURES_ROOT = (MODULE_ROOT / "tests" / "fixtures").resolve()  # pylint: disable=no-member
+FIXTURES_ROOT = (MODULE_ROOT / "tests" / "fixtures").resolve()
 PACKAGE_ROOT = MODULE_ROOT.parent
-DATA_ROOT = (PACKAGE_ROOT / "data").resolve()  # pylint: disable=no-member
+DATA_ROOT = (PACKAGE_ROOT / "data").resolve()
 
 class ProgressLogger(object):
     """Throttles and display progress in human readable form."""
@@ -76,26 +76,29 @@ def built(path, version_string=None):
     If a version_string is provided, this has to match, or the version
     is regarded as not built.
     """
-    if version_string:
-        fname = os.path.join(path, '.built')
-        if not os.path.isfile(fname):
-            return False
-        else:
-            with open(fname, 'r') as read:
-                text = read.read().split('\n')
-            return (len(text) > 1 and text[1] == version_string)
+    built_file_path = os.path.join(path, '.built')
+    if not os.path.isfile(built_file_path):
+        return False
     else:
-        return os.path.isfile(os.path.join(path, '.built'))
+        with open(built_file_path, 'r') as built_file:
+            text = built_file.read().split('\n')
+        if len(text) <= 2:
+            return False
+        for fname in text[1:-1]:
+            if not os.path.isfile(os.path.join(path, fname)) and not os.path.isdir(os.path.join(path, fname)):
+                return False
+        return text[-1] == version_string if version_string else True
 
 
-def mark_done(path, version_string=None):
+def mark_done(path, fnames, version_string='vXX'):
     """Marks the path as done by adding a '.built' file with the current
     timestamp plus a version description string if specified.
     """
-    with open(os.path.join(path, '.built'), 'w') as write:
-        write.write(str(datetime.datetime.today()))
-        if version_string:
-            write.write('\n' + version_string)
+    with open(os.path.join(path, '.built'), 'w') as built_file:
+        built_file.write(str(datetime.datetime.today()))
+        for fname in fnames:
+            built_file.write('\n' + fname.replace('.tar.gz', '').replace('.tgz', '').replace('.gz', '').replace('.zip', ''))
+        built_file.write('\n' + version_string)
 
 
 def download(url, path, fname, redownload=False):
@@ -241,18 +244,27 @@ def download_from_google_drive(gd_id, destination):
 
 
 def download_files(fnames: List[str],
-                   model_folder: str,
+                   local_folder: str,
                    version: str = 'v1.0',
-                   paths: Union[List[str], str] = 'aws'):
-    """Download model/data files from a url.
-       fnames -- list of filenames to download
-       model_folder -- models/data will be downloaded into data/model_folder
-       version -- version of the model
-       path -- url or respective urls for downloading filenames; defaults to downloading from AWS
+                   paths: Union[List[str], str] = 'aws') -> List[str]:
+    r"""Download model/data files from a url.
+
+    Args:
+        fnames: List of filenames to download
+        local_folder: Sub-folder of `./data` where models/data will
+            be downloaded.
+        version: Version of the model
+        path: url or respective urls for downloading filenames.
+
+    Return:
+        List[str]: List of downloaded file path.
+            If the downloaded file was a compressed file (`.tar.gz`,
+            `.zip`, `.tgz`, `.gz`), return the path of the folder
+            containing the extracted files.
     """
 
-    dpath = str(DATA_ROOT / model_folder)
-    out_paths = list(dpath + '/' + fname.replace('.tgz', '').replace('.gz', '').replace('.zip', '')
+    dpath = str(DATA_ROOT / local_folder)
+    out_paths = list(dpath + '/' + fname.replace('.tar.gz', '').replace('.tgz', '').replace('.gz', '').replace('.zip', '')
                      for fname in fnames)
 
     if not built(dpath, version):
@@ -269,13 +281,13 @@ def download_files(fnames: List[str],
         for fname, path in zip(fnames, paths):
             if path == 'aws':
                 url = 'http://huggingface.co/downloads/models/'
-                url += model_folder + '/'
+                url += local_folder + '/'
                 url += fname
             else:
                 url = path + '/' + fname
             download(url, dpath, fname)
-            if '.tgz' in fname or '.gz' in fname or '.zip' in fname:
+            if '.tar.gz' in fname or '.tgz' in fname or '.gz' in fname or '.zip' in fname:
                 untar(dpath, fname)
         # Mark the data as built.
-        mark_done(dpath, version)
+        mark_done(dpath, fnames, version)
     return out_paths

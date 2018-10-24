@@ -1,26 +1,28 @@
 import json
 import logging
-from typing import Iterator
+from typing import Iterator, List, Tuple
+
+from adversarialnlp.common.file_utils import download_files
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-def squad_reader(file_path: str) -> Iterator:
-    """
-    Reads a JSON-formatted SQuAD file and returns an Iterator over ``Dataset`` where the ``Instances`` have four
-    fields: ``question``, a ``TextField``, ``passage``, another ``TextField``, and ``span_start``
-    and ``span_end``, both ``IndexFields`` into the ``passage`` ``TextField``.  We also add a
-    ``MetadataField`` that stores the instance's ID, the original passage text, gold answer strings,
-    and token offsets into the original passage, accessible as ``metadata['id']``,
-    ``metadata['original_passage']``, ``metadata['answer_texts']`` and
-    ``metadata['token_offsets']``.  This is so that we can more easily use the official SQuAD
-    evaluation script to get metrics.
+def squad_reader(file_path: str = None) -> Iterator[List[Tuple[str, str]]]:
+    r""" Reads a JSON-formatted SQuAD file and returns an Iterator.
 
-    Parameters
-    ----------
-    file_path : ``str``
-        Path to a JSON-formatted SQuAD file.
+    Args:
+        file_path: Path to a JSON-formatted SQuAD file.
+            If no path is provided, download and use SQuAD v1.0 training dataset.
+
+    Return:
+        list of tuple (question_answer, paragraph).
     """
+    if file_path is None:
+        file_path = download_files(fnames=['train-v1.1.json'],
+                                   paths='https://rajpurkar.github.io/SQuAD-explorer/dataset/',
+                                   local_folder='squad')
+        file_path = file_path[0]
+
     logger.info("Reading file at %s", file_path)
     with open(file_path) as dataset_file:
         dataset_json = json.load(dataset_file)
@@ -32,5 +34,5 @@ def squad_reader(file_path: str) -> Iterator:
             paragraph = paragraph_json["context"]
             for question_answer in paragraph_json['qas']:
                 question_answer["question"] = question_answer["question"].strip().replace("\n", "")
-                out_data.append((question_answer, paragraph, article['title']))
+                out_data.append((question_answer, paragraph))
     return out_data

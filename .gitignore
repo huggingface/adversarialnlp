@@ -23,7 +23,7 @@ lib/*
 
 .cache/
 .vscode/
-doc/_build/
+docs/_build/
 
 
 # python

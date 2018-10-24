@@ -5,6 +5,7 @@ from typing import Iterable, Dict, Tuple
 from collections import defaultdict
 
 from adversarialnlp.common.file_utils import download_files
+from adversarialnlp.generators import Generator
 from adversarialnlp.generators.addsent.rules import (ANSWER_RULES, HIGH_CONF_ALTER_RULES, ALL_ALTER_RULES,
                                                      DO_NOT_ALTER, BAD_ALTERATIONS, CONVERSION_RULES)
 from adversarialnlp.generators.addsent.utils import (rejoin, ConstituencyParse, get_tokens_for_answers,
@@ -18,55 +19,92 @@ SQUAD_FILE = 'data/squad/train-v1.1.json'
 NEARBY_GLOVE_FILE = 'data/addsent/nearby_n100_glove_6B_100d.json'
 POSTAG_FILE = 'data/addsent/postag_dict.json'
 
-class AddSentGenerator():
+class AddSentGenerator(Generator):
+    r"""Adversarial examples generator based on AddSent.
+
+    AddSent is described in the paper `Adversarial Examples for
+    Evaluating Reading Comprehension Systems`_
+    by Robin Jia & Percy Liang
+
+    Args:
+        alteration_strategy: Alteration strategy. Options:
+
+            - `separate`: Do best alteration for each word separately.
+            - `best`: Generate exactly one best alteration
+                (may over-alter).
+            - `high-conf`: Do all possible high-confidence alterations.
+            - `high-conf-separate`: Do best high-confidence alteration
+                for each word separately.
+            - `all`: Do all possible alterations (very conservative)
+
+        prepend: Insert adversarial example at the beginning
+            or end of the context.
+        use_answer_placeholder: Use and answer placeholder.
+        quiet: Output debuging information.
+
+    Inputs:
+        seed_instances (optional): Instances to use as seed
+            for adversarial example generation. If None use SQuAD
+            V1.0 training dataset. Default to None
+        num_epochs (optional): How times should we iterate over the seeds?
+            If None, we will iterate over it forever. Default to None.
+        shuffle (optional): Shuffle the instances before iteration.
+            If True, we will shuffle the instances before iterating.
+            Default to False.
+
+    Yields:
+        adversarial_examples (Iterable): Adversarial examples generated
+        from the seeds.
+
+    Examples::
+
+        generator = AddSentGenerator()
+        examples = generator(num_epochs=1)
+
+    .. _`Adversarial Examples for Evaluating Reading Comprehension Systems`:
+        http://arxiv.org/abs/1707.07328
+    """
     def __init__(self,
                  alteration_strategy: str = 'high-conf',
                  prepend: bool = False,
                  use_answer_placeholder: bool = False,
+                 default_seeds: Iterable = None,
                  quiet: bool = False):
-        """ Adversarial examples generator based on AddSent
-            Possible strategies:
-                - separate: Do best alteration for each word separately.
-                - best: Generate exactly one best alteration (may over-alter).
-                - high-conf: Do all possible high-confidence alterations
-                - high-conf-separate: Do best high-confidence alteration for each word separately.
-                - all: Do all possible alterations (very conservative)
-        """
-        super(AddSentGenerator).__init__()
+        super(AddSentGenerator).__init__(default_seeds, quiet)
         model_files = download_files(fnames=['nearby_n100_glove_6B_100d.json',
                                              'postag_dict.json'],
-                                     model_folder='addsent')
-        download_files(fnames=['train-v1.1.json', 'dev-v1.1.json'],
-                       paths='https://rajpurkar.github.io/SQuAD-explorer/dataset/',
-                       model_folder='squad')
+                                     local_folder='addsent')
         corenlp_path = download_files(fnames=['stanford-corenlp-full-2018-02-27.zip'],
                                       paths='http://nlp.stanford.edu/software/',
-                                      model_folder='corenlp')
+                                      local_folder='corenlp')
 
         self.nlp: StanfordCoreNLP = StanfordCoreNLP(corenlp_path[0])
-        with open(model_files[0]) as data_file:
+        with open(model_files[0], 'r') as data_file:
             self.nearby_word_dict: Dict = json.load(data_file)
-        with open(model_files[1]) as data_file:
+        with open(model_files[1], 'r') as data_file:
             self.postag_dict: Dict = json.load(data_file)
 
         self.alteration_strategy: str = alteration_strategy
         self.prepend: bool = prepend
         self.use_answer_placeholder: bool = use_answer_placeholder
-        self.quiet: bool = quiet
-
-        self._epochs: Dict[int, int] = defaultdict(int)
+        if default_seeds is None:
+            self.default_seeds = squad_reader(SQUAD_FILE)
+        else:
+            self.default_seeds = default_seeds
 
     def close(self):
         self.nlp.close()
 
     def _annotate(self, text: str, annotators: str):
+        r"""Wrapper to call CoreNLP.
+        """
         props = {'annotators': annotators,
                  'ssplit.newlineIsSentenceBreak': 'always',
                  'outputFormat':'json'}
         return json.loads(self.nlp.annotate(text, properties=props))
 
     def _alter_question(self, question, tokens, const_parse):
-        """Alter the question to make it ask something else.
+        r"""Alter the question to make it ask something else.
         """
         used_words = [tok['word'].lower() for tok in tokens]
         new_qs = []
@@ -125,10 +163,10 @@ class AddSentGenerator():
                 new_qs.append((rejoin(toks_all), toks_all, new_const_parse, self.alteration_strategy))
         return new_qs
 
-    def edit_seed_instance(self, seed_instance: Tuple):
+    def _generate_from_seed(self, seed: Tuple):
         """Edit a SQuAD example using rules.
         """
-        qas, paragraph, title = seed_instance
+        qas, paragraph, title = seed
         question = qas['question'].strip()
         if not self.quiet:
             print(f"Question: {question}")
@@ -184,46 +222,8 @@ class AddSentGenerator():
                                    'qas': [cur_qa]}
                     yield out_example
 
-    def __call__(self,
-                 seed_instances: Iterable = None,
-                 num_epochs: int = None,
-                 shuffle: bool = True) -> Iterable:
-        """
-        Returns a generator that yields batches over the given dataset
-        for the given number of epochs. If ``num_epochs`` is not specified,
-        it will yield batches forever.
-        Parameters
-        ----------
-        instances : ``Iterable[Instance]``
-            The instances in the dataset. IMPORTANT: this must be able to be
-            iterated over *multiple times*. That is, it must be either a List
-            or some other object whose ``__iter__`` method returns a fresh iterator
-            each time it's called.
-        num_epochs : ``int``, optional (default=``None``)
-            How times should we iterate over this dataset?  If ``None``, we will iterate over it
-            forever.
-        shuffle : ``bool``, optional (default=``True``)
-            If ``True``, we will shuffle the instances in ``dataset`` before constructing batches
-            and iterating over the data.
-        """
-        if seed_instances is None:
-            seed_instances = squad_reader(SQUAD_FILE)
-        # Instances is likely to be a list, which cannot be used as a key,
-        # so we take the object id instead.
-        key = id(seed_instances)
-        starting_epoch = self._epochs[key]
-
-        if num_epochs is None:
-            epochs: Iterable[int] = itertools.count(starting_epoch)
-        else:
-            epochs = range(starting_epoch, starting_epoch + num_epochs)
-
-        for epoch in epochs:
-            self._epochs[key] = epoch
-            for seed_instance in seed_instances:
-                yield from self.edit_seed_instance(seed_instance)
-
 # from adversarialnlp.common.file_utils import FIXTURES_ROOT
 # generator = AddSentGenerator()
 # test_instances = squad_reader(FIXTURES_ROOT / 'squad.json')
 # batches = list(generator(test_instances, num_epochs=1))
+# assert len(batches) != 0
