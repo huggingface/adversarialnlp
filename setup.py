@@ -25,6 +25,9 @@ with open("adversarialnlp/version.py", "r") as version_file:
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if needs_pytest else []
 
+with open('requirements.txt', 'r') as f:
+    install_requires = [l for l in f.readlines() if not l.startswith('# ')]
+
 setup_requirements = [
     # add other setup requirements as necessary
 ] + pytest_runner
@@ -48,19 +51,11 @@ setup(name='adversarialnlp',
       license='Apache',
       packages=find_packages(exclude=["*.tests", "*.tests.*",
                                       "tests.*", "tests"]),
-      install_requires=[
-            'allennlp>=0.7.0',
-            'num2words',
-      ],
+      install_requires=install_requires,
       scripts=["bin/adversarialnlp"],
       setup_requires=setup_requirements,
       tests_require=[
           'pytest',
-          'flaky',
-          'responses>=0.7',
-          'moto==1.3.4',
-          'jupyter',
-          'ipykernel<5.0.0',
       ],
       include_package_data=True,
       python_requires='>=3.6.1',

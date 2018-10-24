@@ -1,38 +1,9 @@
 import math
 
+from adversarialnlp.generators.addsent.utils import rejoin
+
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
                     'august', 'september', 'october', 'november', 'december']
-
-ANSWER_RULES = [
-        ('date', ans_date),
-        ('number', ans_number),
-        ('ner_person', ans_entity_full('PERSON', 'Jeff Dean')),
-        ('ner_location', ans_entity_full('LOCATION', 'Chicago')),
-        ('ner_organization', ans_entity_full('ORGANIZATION', 'Stark Industries')),
-        ('ner_misc', ans_entity_full('MISC', 'Jupiter')),
-        ('abbrev', ans_abbrev('LSTM')),
-        ('wh_who', ans_match_wh('who', 'Jeff Dean')),
-        ('wh_when', ans_match_wh('when', '1956')),
-        ('wh_where', ans_match_wh('where', 'Chicago')),
-        ('wh_where', ans_match_wh('how many', '42')),
-        # Starts with verb
-        ('pos_begin_vb', ans_pos('VB', 'learn')),
-        ('pos_end_vbd', ans_pos('VBD', 'learned')),
-        ('pos_end_vbg', ans_pos('VBG', 'learning')),
-        ('pos_end_vbp', ans_pos('VBP', 'learns')),
-        ('pos_end_vbz', ans_pos('VBZ', 'learns')),
-        # Ends with some POS tag
-        ('pos_end_nn', ans_pos('NN', 'hamster', end=True, add_dt=True)),
-        ('pos_end_nnp', ans_pos('NNP', 'Central Park', end=True, add_dt=True)),
-        ('pos_end_nns', ans_pos('NNS', 'hamsters', end=True, add_dt=True)),
-        ('pos_end_nnps', ans_pos('NNPS', 'Kew Gardens', end=True, add_dt=True)),
-        ('pos_end_jj', ans_pos('JJ', 'deep', end=True)),
-        ('pos_end_jjr', ans_pos('JJR', 'deeper', end=True)),
-        ('pos_end_jjs', ans_pos('JJS', 'deepest', end=True)),
-        ('pos_end_rb', ans_pos('RB', 'silently', end=True)),
-        ('pos_end_vbg', ans_pos('VBG', 'learning', end=True)),
-        ('catch_all', ans_catch_all('aliens')),
-]
 
 def ans_number(a, tokens, q, **kwargs):
     out_toks = []
@@ -100,13 +71,14 @@ def ans_number(a, tokens, q, **kwargs):
             out_tok['originalText'] = t['originalText']
         out_toks.append(out_tok)
     if seen_num:
-        return corenlp.rejoin(out_toks).strip()
+        return rejoin(out_toks).strip()
     else:
         return None
 
 def ans_date(a, tokens, q, **kwargs):
     out_toks = []
-    if not all(t['ner'] == 'DATE' for t in tokens): return None
+    if not all(t['ner'] == 'DATE' for t in tokens):
+        return None
     for t in tokens:
         if t['pos'] == 'CD' or t['word'].isdigit():
             try:
@@ -125,7 +97,7 @@ def ans_date(a, tokens, q, **kwargs):
                 # Give up
                 new_val = t['originalText']
         out_toks.append({'before': t['before'], 'originalText': new_val})
-    new_ans = corenlp.rejoin(out_toks).strip()
+    new_ans = rejoin(out_toks).strip()
     if new_ans == a['text']: return None
     return new_ans
 
@@ -171,3 +143,34 @@ def ans_catch_all(new_ans):
     def func(a, tokens, q, **kwargs):
         return new_ans
     return func
+
+ANSWER_RULES = [
+        ('date', ans_date),
+        ('number', ans_number),
+        ('ner_person', ans_entity_full('PERSON', 'Jeff Dean')),
+        ('ner_location', ans_entity_full('LOCATION', 'Chicago')),
+        ('ner_organization', ans_entity_full('ORGANIZATION', 'Stark Industries')),
+        ('ner_misc', ans_entity_full('MISC', 'Jupiter')),
+        ('abbrev', ans_abbrev('LSTM')),
+        ('wh_who', ans_match_wh('who', 'Jeff Dean')),
+        ('wh_when', ans_match_wh('when', '1956')),
+        ('wh_where', ans_match_wh('where', 'Chicago')),
+        ('wh_where', ans_match_wh('how many', '42')),
+        # Starts with verb
+        ('pos_begin_vb', ans_pos('VB', 'learn')),
+        ('pos_end_vbd', ans_pos('VBD', 'learned')),
+        ('pos_end_vbg', ans_pos('VBG', 'learning')),
+        ('pos_end_vbp', ans_pos('VBP', 'learns')),
+        ('pos_end_vbz', ans_pos('VBZ', 'learns')),
+        # Ends with some POS tag
+        ('pos_end_nn', ans_pos('NN', 'hamster', end=True, add_dt=True)),
+        ('pos_end_nnp', ans_pos('NNP', 'Central Park', end=True, add_dt=True)),
+        ('pos_end_nns', ans_pos('NNS', 'hamsters', end=True, add_dt=True)),
+        ('pos_end_nnps', ans_pos('NNPS', 'Kew Gardens', end=True, add_dt=True)),
+        ('pos_end_jj', ans_pos('JJ', 'deep', end=True)),
+        ('pos_end_jjr', ans_pos('JJR', 'deeper', end=True)),
+        ('pos_end_jjs', ans_pos('JJS', 'deepest', end=True)),
+        ('pos_end_rb', ans_pos('RB', 'silently', end=True)),
+        ('pos_end_vbg', ans_pos('VBG', 'learning', end=True)),
+        ('catch_all', ans_catch_all('aliens')),
+]

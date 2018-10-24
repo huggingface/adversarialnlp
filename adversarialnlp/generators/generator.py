@@ -1,28 +1,14 @@
 import logging
-from typing import Dict, Union, Iterable, Iterator, List, Optional, Tuple
-from collections import defaultdict
-import itertools
-import math
-import random
-
-import torch
-
-from allennlp.common.registrable import Registrable
-from allennlp.common.util import is_lazy, lazy_groups_of, ensure_list
-from allennlp.data.dataset import Batch
-from allennlp.data.fields import MetadataField
-from allennlp.data.instance import Instance
-from allennlp.data.vocabulary import Vocabulary
-from allennlp.data.iterators import DataIterator
+from typing import Dict, Union, Iterator, List
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
-TensorDict = Dict[str, Union[torch.Tensor, Dict[str, torch.Tensor]]]  # pylint: disable=invalid-name
+AdversarialExample = Union[str, Dict[str, Union[str, List[str]]]]  # pylint: disable=invalid-name
 
 
-class Generator(Registrable):
+class Generator():
     """
-    An abstract ``Generator`` class. ``Generators`` must override ``_create_batches()``.
+    An abstract ``Generator`` class.
     Parameters
     ----------
     num_examples : int, optional (default = 8)
@@ -31,11 +17,12 @@ class Generator(Registrable):
     default_implementation = 'swag'
 
     def __init__(self,
+                 seeds: Iterator,
                  num_examples: int = 8) -> None:
         self._num_examples = num_examples
+        self._seeds = seeds
 
-    def __call__(self,
-                 instances: DataIterator) -> Iterator[TensorDict]:
+    def __iter__(self) -> Iterator[AdversarialExample]:
         """
         Returns a generator that yields batches of num_examples adversarial examples generated from
         the given dataset.

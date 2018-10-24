@@ -11,46 +11,6 @@ POS_TO_WORDNET = {
         'JJS': wn.ADJ,
 }
 
-SPECIAL_ALTERATIONS = {
-        'States': 'Kingdom',
-        'US': 'UK',
-        'U.S': 'U.K.',
-        'U.S.': 'U.K.',
-        'UK': 'US',
-        'U.K.': 'U.S.',
-        'U.K': 'U.S.',
-        'largest': 'smallest',
-        'smallest': 'largest',
-        'highest': 'lowest',
-        'lowest': 'highest',
-        'May': 'April',
-        'Peyton': 'Trevor',
-}
-
-DO_NOT_ALTER = ['many', 'such', 'few', 'much', 'other', 'same', 'general',
-                                'type', 'record', 'kind', 'sort', 'part', 'form', 'terms', 'use',
-                                'place', 'way', 'old', 'young', 'bowl', 'united', 'one',
-                                'likely', 'different', 'square', 'war', 'republic', 'doctor', 'color']
-
-BAD_ALTERATIONS = ['mx2004', 'planet', 'u.s.', 'Http://Www.Co.Mo.Md.Us']
-
-HIGH_CONF_ALTER_RULES = collections.OrderedDict([
-        ('special', alter_special),
-        ('wn_antonyms', alter_wordnet_antonyms),
-        ('nearbyNum', alter_nearby(['CD'], ignore_pos=True)),
-        ('nearbyProperNoun', alter_nearby(['NNP', 'NNPS'])),
-        ('nearbyProperNoun', alter_nearby(['NNP', 'NNPS'], ignore_pos=True)),
-        ('nearbyEntityNouns', alter_nearby(['NN', 'NNS'], is_ner=True)),
-        ('nearbyEntityJJ', alter_nearby(['JJ', 'JJR', 'JJS'], is_ner=True)),
-        ('entityType', alter_entity_type),
-        #('entity_glove', alter_entity_glove),
-])
-ALL_ALTER_RULES = collections.OrderedDict(HIGH_CONF_ALTER_RULES.items() + [
-        ('nearbyAdj', alter_nearby(['JJ', 'JJR', 'JJS'])),
-        ('nearbyNoun', alter_nearby(['NN', 'NNS'])),
-        #('nearbyNoun', alter_nearby(['NN', 'NNS'], ignore_pos=True)),
-])
-
 def alter_special(token, **kwargs):
     w = token['originalText']
     if w in SPECIAL_ALTERATIONS:
@@ -136,3 +96,43 @@ def alter_wordnet_antonyms(token, **kwargs):
                 if '_' in a.name(): continue
                 antonyms.append(new_word)
     return antonyms
+
+SPECIAL_ALTERATIONS = {
+        'States': 'Kingdom',
+        'US': 'UK',
+        'U.S': 'U.K.',
+        'U.S.': 'U.K.',
+        'UK': 'US',
+        'U.K.': 'U.S.',
+        'U.K': 'U.S.',
+        'largest': 'smallest',
+        'smallest': 'largest',
+        'highest': 'lowest',
+        'lowest': 'highest',
+        'May': 'April',
+        'Peyton': 'Trevor',
+}
+
+DO_NOT_ALTER = ['many', 'such', 'few', 'much', 'other', 'same', 'general',
+                                'type', 'record', 'kind', 'sort', 'part', 'form', 'terms', 'use',
+                                'place', 'way', 'old', 'young', 'bowl', 'united', 'one',
+                                'likely', 'different', 'square', 'war', 'republic', 'doctor', 'color']
+
+BAD_ALTERATIONS = ['mx2004', 'planet', 'u.s.', 'Http://Www.Co.Mo.Md.Us']
+
+HIGH_CONF_ALTER_RULES = collections.OrderedDict([
+        ('special', alter_special),
+        ('wn_antonyms', alter_wordnet_antonyms),
+        ('nearbyNum', alter_nearby(['CD'], ignore_pos=True)),
+        ('nearbyProperNoun', alter_nearby(['NNP', 'NNPS'])),
+        ('nearbyProperNoun', alter_nearby(['NNP', 'NNPS'], ignore_pos=True)),
+        ('nearbyEntityNouns', alter_nearby(['NN', 'NNS'], is_ner=True)),
+        ('nearbyEntityJJ', alter_nearby(['JJ', 'JJR', 'JJS'], is_ner=True)),
+        ('entityType', alter_entity_type),
+        #('entity_glove', alter_entity_glove),
+])
+ALL_ALTER_RULES = collections.OrderedDict(list(HIGH_CONF_ALTER_RULES.items()) + [
+        ('nearbyAdj', alter_nearby(['JJ', 'JJR', 'JJS'])),
+        ('nearbyNoun', alter_nearby(['NN', 'NNS'])),
+        #('nearbyNoun', alter_nearby(['NN', 'NNS'], ignore_pos=True)),
+])

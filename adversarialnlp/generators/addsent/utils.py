@@ -1,4 +1,5 @@
 """Utilities for AddSent generator."""
+from typing import List, Dict, Tuple, Optional
 
 class ConstituencyParse(object):
     """A CoreNLP constituency parse (or a node in a parse tree).
@@ -104,7 +105,7 @@ class ConstituencyParse(object):
             raise ValueError('len(new_words) == %d != i == %d' % (len(new_words), i))
         return new_tree
 
-def rejoin(tokens, sep=None):
+def rejoin(tokens: List[Dict[str, str]], sep: str = None) -> str:
     """Rejoin tokens into the original sentence.
 
     Args:
@@ -121,7 +122,7 @@ def rejoin(tokens, sep=None):
         return sep.join(t['originalText'] for t in tokens)
 
 
-def get_tokens_for_answers(answer_objs, corenlp_obj):
+def get_tokens_for_answers(answer_objs: List[Tuple[int, Dict]], corenlp_obj: Dict) -> Tuple[int, List]:
     """Get CoreNLP tokens corresponding to a SQuAD answer object."""
     first_a_toks = None
     for i, a_obj in enumerate(answer_objs):
@@ -144,7 +145,7 @@ def get_tokens_for_answers(answer_objs, corenlp_obj):
     # Default to the first
     return 0, first_a_toks
 
-def get_determiner_for_answers(answer_objs):
+def get_determiner_for_answers(answer_objs: List[Dict]) -> Optional[str]:
     for ans in answer_objs:
         words = ans['text'].split(' ')
         if words[0].lower() == 'the':

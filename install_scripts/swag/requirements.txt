@@ -1,2 +1,0 @@
-allennlp>=0.7.0
-num2words

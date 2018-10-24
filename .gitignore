@@ -6,6 +6,7 @@ adversarialnlp.egg-info/
 build/
 dist/
 data/*
+lib/*
 
 # dev tools
 

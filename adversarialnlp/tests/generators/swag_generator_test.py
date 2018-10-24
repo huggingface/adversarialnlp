@@ -11,7 +11,7 @@ from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.dataset_readers.dataset_reader import _LazyInstances
 
 from adversarialnlp.generators.swag.swag_generator import SwagGenerator
-from adversarialnlp.dataset_readers import ActivityNetCaptionsDatasetReader
+from adversarialnlp.generators.swag.activitynet_captions import ActivityNetCaptionsDatasetReader
 from adversarialnlp.tests.utils import FIXTURES_ROOT
 
 

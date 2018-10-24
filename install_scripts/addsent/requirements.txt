@@ -1,3 +1,0 @@
-pattern3
-nltk
-stanfordcorenlp==3.9.1.1

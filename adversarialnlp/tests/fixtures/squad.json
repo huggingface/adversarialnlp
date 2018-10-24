@@ -1,0 +1,113 @@
+{
+	"data": [{
+		"title": "Super_Bowl_50",
+		"paragraphs": [{
+			"context": "Super Bowl 50 was an American football game to determine the champion of the National Football League (NFL) for the 2015 season. The American Football Conference (AFC) champion Denver Broncos defeated the National Football Conference (NFC) champion Carolina Panthers 24\u201310 to earn their third Super Bowl title. The game was played on February 7, 2016, at Levi's Stadium in the San Francisco Bay Area at Santa Clara, California. As this was the 50th Super Bowl, the league emphasized the \"golden anniversary\" with various gold-themed initiatives, as well as temporarily suspending the tradition of naming each Super Bowl game with Roman numerals (under which the game would have been known as \"Super Bowl L\"), so that the logo could prominently feature the Arabic numerals 50.",
+			"qas": [{
+				"answers": [{
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}, {
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}, {
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}],
+				"question": "Which NFL team represented the AFC at Super Bowl 50?",
+				"id": "56be4db0acb8001400a502ec"
+			}, {
+				"answers": [{
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}, {
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}, {
+					"answer_start": 177,
+					"text": "Denver Broncos"
+				}],
+				"question": "Which NFL team won Super Bowl 50?",
+				"id": "56be4db0acb8001400a502ef"
+			}]
+		}, {
+			"context": "The Panthers finished the regular season with a 15\u20131 record, and quarterback Cam Newton was named the NFL Most Valuable Player (MVP). They defeated the Arizona Cardinals 49\u201315 in the NFC Championship Game and advanced to their second Super Bowl appearance since the franchise was founded in 1995. The Broncos finished the regular season with a 12\u20134 record, and denied the New England Patriots a chance to defend their title from Super Bowl XLIX by defeating them 20\u201318 in the AFC Championship Game. They joined the Patriots, Dallas Cowboys, and Pittsburgh Steelers as one of four teams that have made eight appearances in the Super Bowl.",
+			"qas": [{
+				"answers": [{
+					"answer_start": 77,
+					"text": "Cam Newton"
+				}, {
+					"answer_start": 77,
+					"text": "Cam Newton"
+				}, {
+					"answer_start": 77,
+					"text": "Cam Newton"
+				}],
+				"question": "Which Carolina Panthers player was named Most Valuable Player?",
+				"id": "56be4e1facb8001400a502f6"
+			}, {
+				"answers": [{
+					"answer_start": 467,
+					"text": "8"
+				}, {
+					"answer_start": 601,
+					"text": "eight"
+				}, {
+					"answer_start": 601,
+					"text": "eight"
+				}],
+				"question": "How many appearances have the Denver Broncos made in the Super Bowl?",
+				"id": "56be4e1facb8001400a502f9"
+			}]
+		}]
+	},{
+		"title": "Warsaw",
+		"paragraphs": [{
+			"context": "One of the most famous people born in Warsaw was Maria Sk\u0142odowska-Curie, who achieved international recognition for her research on radioactivity and was the first female recipient of the Nobel Prize. Famous musicians include W\u0142adys\u0142aw Szpilman and Fr\u00e9d\u00e9ric Chopin. Though Chopin was born in the village of \u017belazowa Wola, about 60 km (37 mi) from Warsaw, he moved to the city with his family when he was seven months old. Casimir Pulaski, a Polish general and hero of the American Revolutionary War, was born here in 1745.",
+			"qas": [{
+				"answers": [{
+					"answer_start": 188,
+					"text": "Nobel Prize"
+				}, {
+					"answer_start": 188,
+					"text": "Nobel Prize"
+				}, {
+					"answer_start": 188,
+					"text": "Nobel Prize"
+				}],
+				"question": "What was Maria Curie the first female recipient of?",
+				"id": "5733a5f54776f41900660f45"
+			}, {
+				"answers": [{
+					"answer_start": 517,
+					"text": "1745"
+				}, {
+					"answer_start": 517,
+					"text": "1745"
+				}, {
+					"answer_start": 517,
+					"text": "1745"
+				}],
+				"question": "What year was Casimir Pulaski born in Warsaw?",
+				"id": "5733a5f54776f41900660f48"
+			}]
+		}, {
+			"context": "The Saxon Garden, covering the area of 15.5 ha, was formally a royal garden. There are over 100 different species of trees and the avenues are a place to sit and relax. At the east end of the park, the Tomb of the Unknown Soldier is situated. In the 19th century the Krasi\u0144ski Palace Garden was remodelled by Franciszek Szanior. Within the central area of the park one can still find old trees dating from that period: maidenhair tree, black walnut, Turkish hazel and Caucasian wingnut trees. With its benches, flower carpets, a pond with ducks on and a playground for kids, the Krasi\u0144ski Palace Garden is a popular strolling destination for the Varsovians. The Monument of the Warsaw Ghetto Uprising is also situated here. The \u0141azienki Park covers the area of 76 ha. The unique character and history of the park is reflected in its landscape architecture (pavilions, sculptures, bridges, cascades, ponds) and vegetation (domestic and foreign species of trees and bushes). What makes this park different from other green spaces in Warsaw is the presence of peacocks and pheasants, which can be seen here walking around freely, and royal carps in the pond. The Wilan\u00f3w Palace Park, dates back to the second half of the 17th century. It covers the area of 43 ha. Its central French-styled area corresponds to the ancient, baroque forms of the palace. The eastern section of the park, closest to the Palace, is the two-level garden with a terrace facing the pond. The park around the Kr\u00f3likarnia Palace is situated on the old escarpment of the Vistula. The park has lanes running on a few levels deep into the ravines on both sides of the palace.",
+			"qas": [{
+				"answers": [{
+					"answer_start": 92,
+					"text": "100"
+				}, {
+					"answer_start": 87,
+					"text": "over 100"
+				}, {
+					"answer_start": 92,
+					"text": "100"
+				}],
+				"question": "Over how many species of trees can be found in the Saxon Garden?",
+				"id": "57336755d058e614000b5a3d"
+			}]
+		}] 
+	}],
+	"version": "1.1"
+}

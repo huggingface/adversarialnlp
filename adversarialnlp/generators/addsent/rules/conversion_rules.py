@@ -1,8 +1,4 @@
-try:
-    from pattern import en as patten
-except ImportError as err:
-    pass
-
+from pattern import en as patten
 
 CONST_PARSE_MACROS = {
         '$Noun': '$NP/$NN/$NNS/$NNP/$NNPS',
@@ -98,7 +94,7 @@ def run_postprocessing(s, rules, all_args):
             s = patten.conjugate(s, POS_TO_PATTERN[rule])
     return s
 
-def convert_whp(node, q, a, tokens, OPTS=None):
+def convert_whp(node, q, a, tokens, quiet=False):
     if node.tag in ('WHNP', 'WHADJP', 'WHADVP', 'WHPP'):
         # Apply WHP rules
         cur_phrase = node.get_phrase()
@@ -106,8 +102,8 @@ def convert_whp(node, q, a, tokens, OPTS=None):
         for r in WHP_RULES:
             phrase = r.convert(cur_phrase, a, cur_tokens, node, run_fix_style=False)
             if phrase:
-                if not OPTS.quiet:
-                    print("  WHP Rule '{r.name}': {phrase}")
+                if not quiet:
+                    print(f"  WHP Rule '{r.name}': {phrase}")
                 return phrase
     return None
 
@@ -136,7 +132,7 @@ class ConstituencyRule(ConversionRule):
         else:
             self.postproc = {}
 
-    def convert(self, q, a, tokens, const_parse, run_fix_style=True):
+    def convert(self, q, a, tokens, const_parse, run_fix_style=True) -> str:
         pattern_toks = self.in_pattern.split(' ')   # Don't care about trailing punctuation
         match = match_pattern(self.in_pattern, const_parse)
         appended_clause = False
@@ -207,10 +203,12 @@ class FindWHPRule(ConversionRule):
     """A rule that looks for $WHP's from right to left and does replacements."""
     name = 'FindWHP'
     def _recursive_convert(self, node, q, a, tokens, found_whp):
-        if node.word: return node.word, found_whp
+        if node.word:
+            return node.word, found_whp
         if not found_whp:
             whp_phrase = convert_whp(node, q, a, tokens)
-            if whp_phrase: return whp_phrase, True
+            if whp_phrase:
+                return whp_phrase, True
         child_phrases = []
         for c in node.children[::-1]:
             c_phrase, found_whp = self._recursive_convert(c, q, a, tokens, found_whp)

@@ -1,3 +1,10 @@
+# General requirements
+requests
 typing
-pytest
-codecov
+# Addsent requirements
+psutil
+pattern
+nltk
+#swag requirements
+allennlp>=0.7.0
+num2words

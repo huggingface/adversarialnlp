@@ -2,8 +2,6 @@ import json
 import logging
 from typing import Iterator
 
-from allennlp.common.file_utils import cached_path
-
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
@@ -28,18 +26,11 @@ def squad_reader(file_path: str) -> Iterator:
         dataset_json = json.load(dataset_file)
         dataset = dataset_json['data']
     logger.info("Reading the dataset")
+    out_data = []
     for article in dataset:
         for paragraph_json in article['paragraphs']:
             paragraph = paragraph_json["context"]
-
             for question_answer in paragraph_json['qas']:
-                question_text = question_answer["question"].strip().replace("\n", "")
-                answer_texts = [answer['text'] for answer in question_answer['answers']]
-                span_starts = [answer['answer_start'] for answer in question_answer['answers']]
-                span_ends = [start + len(answer) for start, answer in zip(span_starts, answer_texts)]
-                instance = self.text_to_instance(question_text,
-                                                    paragraph,
-                                                    zip(span_starts, span_ends),
-                                                    answer_texts,
-                                                    tokenized_paragraph)
-                yield instance
+                question_answer["question"] = question_answer["question"].strip().replace("\n", "")
+                out_data.append((question_answer, paragraph, article['title']))
+    return out_data
