@@ -4,7 +4,7 @@ import itertools
 from typing import Iterable, Dict, Tuple
 from collections import defaultdict
 
-from adversarialnlp.common.file_utils import download_files
+from ..common.file_utils import download_files
 from adversarialnlp.generators import Generator
 from adversarialnlp.generators.addsent.rules import (ANSWER_RULES, HIGH_CONF_ALTER_RULES, ALL_ALTER_RULES,
                                                      DO_NOT_ALTER, BAD_ALTERATIONS, CONVERSION_RULES)
