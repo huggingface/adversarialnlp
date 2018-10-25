@@ -1,3 +1,4 @@
 requests
 typing
 pytest
+PyYAML==3.13
