@@ -6,5 +6,5 @@
 # pattern
 # nltk
 #swag requirements
-# allennlp
+allennlp
 # num2words
