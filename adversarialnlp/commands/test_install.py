@@ -21,8 +21,9 @@ import pathlib
 
 import pytest
 
-import adversarialnlp
 from allennlp.commands.subcommand import Subcommand
+
+import adversarialnlp
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
