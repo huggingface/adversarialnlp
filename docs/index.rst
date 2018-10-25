@@ -14,8 +14,10 @@ AdversarialNLP is a generic library for crafting and using Adversarial NLP examp
    :maxdepth: 1
    :caption: Contents
 
-    common
-    generators
+   readme
+
+   common
+   generators
 
 
 Indices and tables

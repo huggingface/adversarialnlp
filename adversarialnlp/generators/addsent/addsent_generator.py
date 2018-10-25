@@ -96,16 +96,14 @@ class AddSentGenerator(Generator):
         self.nlp.close()
 
     def _annotate(self, text: str, annotators: str):
-        r"""Wrapper to call CoreNLP.
-        """
+        r"""Wrapper to call CoreNLP. """
         props = {'annotators': annotators,
                  'ssplit.newlineIsSentenceBreak': 'always',
                  'outputFormat':'json'}
         return json.loads(self.nlp.annotate(text, properties=props))
 
     def _alter_question(self, question, tokens, const_parse):
-        r"""Alter the question to make it ask something else.
-        """
+        r"""Alter the question to make it ask something else. """
         used_words = [tok['word'].lower() for tok in tokens]
         new_qs = []
         toks_all = []
@@ -163,9 +161,8 @@ class AddSentGenerator(Generator):
                 new_qs.append((rejoin(toks_all), toks_all, new_const_parse, self.alteration_strategy))
         return new_qs
 
-    def _generate_from_seed(self, seed: Tuple):
-        """Edit a SQuAD example using rules.
-        """
+    def generate_from_seed(self, seed: Tuple):
+        r"""Edit a SQuAD example using rules. """
         qas, paragraph, title = seed
         question = qas['question'].strip()
         if not self.quiet:

@@ -206,21 +206,24 @@ class SimpleBiLM(torch.nn.Module):
         words = {k: v['tokens'] for k, v in batch.as_tensor_dict().items()}['story']
         return words
 
-    def conditional_generation(self, context, gt_completion, batch_size=128, max_gen_length=25,
-                               same_length_as_gt=False):
+    def conditional_generation(self, context: List[str], gt_completion: List[str],
+                               batch_size: int = 128, max_gen_length: int = 25,
+                               same_length_as_gt: bool = False, first_is_gold: bool = False):
         """
         Generate conditoned on the context. While we're at it we'll score the GT going forwards
         :param context: List of tokens to condition on. We'll add the BOS marker to it
-        :param gt_completion: The GT completion
+        :param gt_completion: The gold truth completion
         :param batch_size: Number of sentences to generate
         :param max_gen_length: Max length for genertaed sentences (irrelvant if same_length_as_gt=True)
         :param same_length_as_gt: set to True if you want all the sents to have the same length as the gt_completion
+        :param first_is_gold: set to True if you want the first sample to be the gt_completion
         :return:
         """
         # Forward condition on context, then repeat to be the right batch size:
         #  (layer_index, batch_size, fwd hidden dim)
-        forward_logprobs = self(self.batch_to_ids([context]), use_forward=True,
-                                use_reverse=False, compute_logprobs=True)['forward_logprobs']
+        log_probs = self(self.batch_to_ids([context]), use_forward=True,
+                                use_reverse=False, compute_logprobs=True)
+        forward_logprobs = log_probs['forward_logprobs']
         self.forward_lm._states = tuple(x.repeat(1, batch_size, 1).contiguous() for x in self.forward_lm._states)
         # Each item will be (token, score)
         generations = [[(context[-1], 0.0)] for i in range(batch_size)]
@@ -238,9 +241,10 @@ class SimpleBiLM(torch.nn.Module):
             sampling_probs = next_dists.clone()
             sampling_probs[:, self.invalid_tokens] = 0.0
 
-            # fix first row!!!
-            sampling_probs[0].zero_()
-            sampling_probs[0, gt_token_ind] = 1
+            if first_is_gold:
+                # Gold truth is first row
+                sampling_probs[0].zero_()
+                sampling_probs[0, gt_token_ind] = 1
 
             if same_length_as_gt:
                 if index == (len(gt_completion) - 1):
@@ -263,7 +267,7 @@ class SimpleBiLM(torch.nn.Module):
                     gen_list.append((self.vocab.get_token_from_index(pred_id), score_i))
             is_eos = (next_preds[:, None] == self.eos_tokens[None]).max(1)[0]
             mask[is_eos] = 0
-            if mask.sum().data[0] == 0:
+            if mask.sum().item() == 0:
                 break
         generation_scores = np.zeros((len(generations), max([len(g) - 1 for g in generations])), dtype=np.float32)
         for i, gen in enumerate(generations):
@@ -295,8 +299,8 @@ class SimpleBiLM(torch.nn.Module):
                                     batch_indexer, time_indexer, targets_flat].view(*target_chunk.size()))
         return torch.cat(all_logprobs, 0)
 
-    def forward(self, words: torch.Tensor, use_forward=True, use_reverse=True, compute_logprobs=False) -> Dict[
-        str, Union[torch.Tensor, List[torch.Tensor]]]:
+    def forward(self, words: torch.Tensor, use_forward: bool = True, use_reverse: bool = True,
+                compute_logprobs: bool = False) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
         """
         use this for training the LM
         :param words: [batch_size, N] words. assuming you're starting with BOS and ending with EOS here

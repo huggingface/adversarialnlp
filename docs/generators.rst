@@ -7,6 +7,10 @@ Generators
 .. automodule:: adversarialnlp.generators
 .. currentmodule:: adversarialnlp.generators
 
+Generator
+----------
+
+.. autoclass:: adversarialnlp.generators.Generator
 
 AddSent
 ----------

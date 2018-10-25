@@ -10,14 +10,14 @@ Utilities for downloading and building data.
 These can be replaced if your particular file system does not support them.
 """
 from typing import Union, List
-import pathlib
+from pathlib import Path
 import time
 import datetime
 import os
 import shutil
 import requests
 
-MODULE_ROOT = pathlib.Path(__file__).parent.parent
+MODULE_ROOT = Path(__file__).parent.parent
 FIXTURES_ROOT = (MODULE_ROOT / "tests" / "fixtures").resolve()
 PACKAGE_ROOT = MODULE_ROOT.parent
 DATA_ROOT = (PACKAGE_ROOT / "data").resolve()
@@ -97,7 +97,8 @@ def mark_done(path, fnames, version_string='vXX'):
     with open(os.path.join(path, '.built'), 'w') as built_file:
         built_file.write(str(datetime.datetime.today()))
         for fname in fnames:
-            built_file.write('\n' + fname.replace('.tar.gz', '').replace('.tgz', '').replace('.gz', '').replace('.zip', ''))
+            fname = fname.replace('.tar.gz', '').replace('.tgz', '').replace('.gz', '').replace('.zip', '')
+            built_file.write('\n' + fname)
         built_file.write('\n' + version_string)
 
 
@@ -199,7 +200,10 @@ def untar(path, fname, deleteTar=True):
     """
     print('unpacking ' + fname)
     fullpath = os.path.join(path, fname)
-    shutil.unpack_archive(fullpath, path)
+    if '.tar.gz' in fname:
+        shutil.unpack_archive(fullpath, path, format='gztar')
+    else:
+        shutil.unpack_archive(fullpath, path)
     if deleteTar:
         os.remove(fullpath)
 
@@ -220,7 +224,6 @@ def _get_confirm_token(response):
         if key.startswith('download_warning'):
             return value
     return None
-
 
 def download_from_google_drive(gd_id, destination):
     """Uses the requests package to download a file from Google Drive."""
@@ -243,7 +246,7 @@ def download_from_google_drive(gd_id, destination):
         response.close()
 
 
-def download_files(fnames: List[str],
+def download_files(fnames: List[Union[str, Path]],
                    local_folder: str,
                    version: str = 'v1.0',
                    paths: Union[List[str], str] = 'aws') -> List[str]:

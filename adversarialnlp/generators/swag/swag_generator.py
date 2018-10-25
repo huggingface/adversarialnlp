@@ -5,18 +5,19 @@ import logging
 
 import torch
 from allennlp.common.util import JsonDict
+from allennlp.common.file_utils import cached_path
 from allennlp.data import Instance, Token, Vocabulary
 from allennlp.data.fields import TextField
-from allennlp.models import Model
 from allennlp.pretrained import PretrainedModel
 
-from adversarialnlp.common.file_utils import download_files
+from adversarialnlp.common.file_utils import download_files, DATA_ROOT
 from adversarialnlp.generators import Generator
 from adversarialnlp.generators.swag.simple_bilm import SimpleBiLM
 from adversarialnlp.generators.swag.utils import optimistic_restore
 from adversarialnlp.generators.swag.activitynet_captions_reader import ActivityNetCaptionsDatasetReader
 
 BATCH_SIZE = 1
+BEAM_SIZE = 8 * BATCH_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -36,33 +37,30 @@ class SwagGenerator(Generator):
     def __init__(self,
                  default_seeds: Iterable = None,
                  quiet: bool = False):
-        super(SwagGenerator).__init__(default_seeds, quiet)
+        super().__init__(default_seeds, quiet)
 
-        lm_files = download_files(fnames=['non_padded_namespaces.txt',
-                                          'tokens.txt',
+        lm_files = download_files(fnames=['vocabulary.zip',
                                           'lm-fold-0.bin'],
                                   local_folder='swag_lm')
-
-        const_parser_files = download_files(fnames=['elmo-constituency-parser-2018.03.14.tar.gz'],
-                                            paths='https://s3-us-west-2.amazonaws.com/allennlp/models/',
-                                            local_folder='allennlp_constituency_parser')
 
         activity_data_files = download_files(fnames=['captions.zip'],
                                              paths='https://cs.stanford.edu/people/ranjaykrishna/densevid/',
                                              local_folder='activitynet_captions')
 
-        self.const_parser = PretrainedModel(const_parser_files[0], 'constituency-parser').predictor()
-        vocab = Vocabulary.from_files('../lm/vocabulary')
+        const_parser_files = cached_path('https://s3-us-west-2.amazonaws.com/allennlp/models/elmo-constituency-parser-2018.03.14.tar.gz',
+                             cache_dir=str(DATA_ROOT / 'allennlp_constituency_parser'))
+
+        self.const_parser = PretrainedModel(const_parser_files, 'constituency-parser').predictor()
+        vocab = Vocabulary.from_files(lm_files[0])
         self.language_model = SimpleBiLM(vocab=vocab, recurrent_dropout_probability=0.2,
                                          embedding_dropout_probability=0.2)
-        optimistic_restore(self.language_model, torch.load(lm_files[2])['state_dict'])
+        optimistic_restore(self.language_model, torch.load(lm_files[1], map_location='cpu')['state_dict'])
 
         if default_seeds is None:
-            self.default_seeds = ActivityNetCaptionsDatasetReader().read(activity_data_files[0])
+            self.default_seeds = ActivityNetCaptionsDatasetReader().read(activity_data_files[0] + '/train.json')
         else:
             self.default_seeds = default_seeds
 
-    # We want to recurse until we find verb phrases
     def _find_VP(self, tree: JsonDict) -> List[Tuple[str, any]]:
         r"""Recurse on a constituency parse tree until we find verb phrases"""
 
@@ -111,7 +109,7 @@ class SwagGenerator(Generator):
         is_vp = [token for x in res_chunked[vp_ind:] for token in x[0].split(' ')]
         return not_vp, is_vp
 
-    def _generate_from_seed(self, seed: Tuple):
+    def generate_from_seed(self, seed: Tuple):
         """Edit a seed example.
         """
         first_sentence: TextField = seed.fields["first_sentence"]
@@ -150,7 +148,7 @@ class SwagGenerator(Generator):
         context = [token.text for token in first_sentence.tokens] + startphrase
 
         lm_out = self.language_model.conditional_generation(context, gt_completion=endphrase,
-                                                            batch_size=2 * BATCH_SIZE,
+                                                            batch_size=BEAM_SIZE,
                                                             max_gen_length=25)
         gens0, fwd_scores, ctx_scores = lm_out
         if len(gens0) < BATCH_SIZE:
@@ -160,7 +158,7 @@ class SwagGenerator(Generator):
         yield gens0
         # fwd_scores = fwd_scores[:BATCH_SIZE]
 
-        # Now get the backward scores.
+        # # Now get the backward scores.
         # full_sents = [context + gen for gen in gens0]  # NOTE: #1 is GT
         # result_dict = self.language_model(self.language_model.batch_to_ids(full_sents),
         #                                   use_forward=False, use_reverse=True, compute_logprobs=True)
@@ -183,7 +181,7 @@ class SwagGenerator(Generator):
         #     np.ones(forward_logperp_ending.shape[0], dtype=np.float32) * forward_logperp_begin,
         # )))
 
-        # # PRINTOUT
+        # PRINTOUT
         # low2high = scores[:, 2].argsort()
         # print("\n\n Dataset={} ctx: {} (perp={:.3f})\n~~~\n".format(item['dataset'], ' '.join(context),
         #                                                             np.exp(forward_logperp_begin)), flush=True)
@@ -195,7 +193,7 @@ class SwagGenerator(Generator):
         # gt_score = low2high.argsort()[0]
 
         # item_full = deepcopy(item)
-        # item_full['sent1'] = s1_toks
+        # item_full['sent1'] = first_sentence
         # item_full['startphrase'] = startphrase
         # item_full['context'] = context
         # item_full['generations'] = gens0
@@ -210,8 +208,8 @@ class SwagGenerator(Generator):
         #     yield generated_examples
         #     generated_examples = []
 
-from adversarialnlp.common.file_utils import FIXTURES_ROOT
-generator = SwagGenerator()
-test_instances = ActivityNetCaptionsDatasetReader().read(FIXTURES_ROOT / 'activitynet_captions.json')
-batches = list(generator(test_instances, num_epochs=1))
-assert len(batches) != 0
+# from adversarialnlp.common.file_utils import FIXTURES_ROOT
+# generator = SwagGenerator()
+# test_instances = ActivityNetCaptionsDatasetReader().read(FIXTURES_ROOT / 'activitynet_captions.json')
+# batches = list(generator(test_instances, num_epochs=1))
+# assert len(batches) != 0

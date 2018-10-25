@@ -7,21 +7,48 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 class Generator():
     r"""An abstract ``Generator`` class.
-    Parameters
-    ----------
-    num_examples : int, optional (default = 8)
-        Number of adversarial examples to yielded each time the iterator is called.
+
+    The Generator takes as inputs an iterable of seeds and edit them
+    to generate potential adversarial examples.
+
+    This class is an abstract class. To implement a ``Generator``, you
+    should override the `generate_from_seed(self, seed: any) method to
+    generate an adversarial sample from a seed sample.
+
+    Args:
+        default_seeds: Default Iterable to use as source of seeds.
+        quiet: Output debuging information.
+
+    Inputs:
+        seed_instances (optional): Instances to use as seed
+            for adversarial example generation. If None use SQuAD
+            V1.0 training dataset. Default to None
+        num_epochs (optional): How times should we iterate over the
+            seeds. If None, we will iterate over it forever.
+            Default to None.
+        shuffle (optional): Shuffle the instances before iteration.
+            If True, we will shuffle the instances before iterating.
+            Default to False.
+
+    Yields:
+        adversarial_examples (Iterable): Adversarial examples
+        generated from the seeds.
+
+    Examples::
+
+        generator = Generator()
+        examples = generator(num_epochs=1)
     """
-    default_implementation = 'addsent'
 
     def __init__(self,
                  default_seeds: Iterable = None,
                  quiet: bool = False):
+        self.default_seeds = default_seeds
         self.quiet: bool = quiet
-        self._epochs: Dict[int, int] = defaultdict(int)
-        self.default_seeds: Iterable = default_seeds
 
-    def _generate_from_seed(self, seed: any):
+        self._epochs: Dict[int, int] = defaultdict(int)
+
+    def generate_from_seed(self, seed: any):
         r"""Generate an adversarial example from a seed.
         """
         raise NotImplementedError
@@ -62,4 +89,4 @@ class Generator():
         for epoch in epochs:
             self._epochs[key] = epoch
             for seed in seeds:
-                yield from self._generate_from_seed(seed)
+                yield from self.generate_from_seed(seed)
