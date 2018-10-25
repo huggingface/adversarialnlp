@@ -6,5 +6,5 @@ psutil
 pattern
 nltk
 #swag requirements
-allennlp>=0.7.0
+allennlp
 num2words
