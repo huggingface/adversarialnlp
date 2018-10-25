@@ -22,4 +22,4 @@ SWAG
 ----
 
 .. autoclass:: adversarialnlp.generators.swag.SwagGenerator
-.. autoclass:: adversarialnlp.generators.swag.activitynet_reader
+.. autoclass:: adversarialnlp.generators.swag.ActivityNetCaptionsDatasetReader
