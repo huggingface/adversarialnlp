@@ -1,11 +1,9 @@
 import collections
 
-try:
-    from nltk.corpus import wordnet as wn
-except LookupError:
-    nltk.download('wordnet')
-    from nltk.corpus import wordnet as wn
+import nltk
+nltk.download('wordnet')
 
+from nltk.corpus import wordnet as wn
 from nltk.stem.lancaster import LancasterStemmer
 
 STEMMER = LancasterStemmer()
