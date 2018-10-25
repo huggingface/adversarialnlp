@@ -6,6 +6,6 @@ build:
 python:
   version: 3.6
 
-requirements_file: docs/readthedoc_requirements.txt
+requirements_file: requirements.txt
 
 formats: []
