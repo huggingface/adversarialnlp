@@ -121,9 +121,6 @@ pytest-cov
 coverage
 codecov
 
-# Required to run sanic tests
-aiohttp
-
 #### DOC-RELATED PACKAGES ####
 
 # Builds our documentation.
