@@ -1,10 +1,10 @@
 # General requirements
-requests
-typing
+# requests
+# typing
 # Addsent requirements
-psutil
-pattern
-nltk
+# psutil
+# pattern
+# nltk
 #swag requirements
-allennlp
-num2words
+# allennlp
+# num2words
