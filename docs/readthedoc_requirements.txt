@@ -1,3 +1,2 @@
-requests
-typing
 pytest
+cffi==1.11.2
