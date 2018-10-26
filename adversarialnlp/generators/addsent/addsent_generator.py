@@ -26,7 +26,10 @@ class AddSentGenerator(Generator):
     Evaluating Reading Comprehension Systems`_
     by Robin Jia & Percy Liang
 
-    Args:
+    Args, input and yield:
+        See the ``Generator`` class.
+
+    Additional arguments:
         alteration_strategy: Alteration strategy. Options:
 
             - `separate`: Do best alteration for each word separately.
@@ -40,29 +43,17 @@ class AddSentGenerator(Generator):
         prepend: Insert adversarial example at the beginning
             or end of the context.
         use_answer_placeholder: Use and answer placeholder.
-        quiet: Output debuging information.
 
-    Inputs:
-        seed_instances (optional): Instances to use as seed
-            for adversarial example generation. If None use SQuAD
-            V1.0 training dataset. Default to None
-        num_epochs (optional): How times should we iterate over the seeds?
-            If None, we will iterate over it forever. Default to None.
-        shuffle (optional): Shuffle the instances before iteration.
-            If True, we will shuffle the instances before iterating.
-            Default to False.
+    Seeds:
+        Tuple of SQuAD-like instances containing
+            - question-answer-span, and
+            - context paragraph.
 
-    Yields:
-        adversarial_examples (Iterable): Adversarial examples generated
-        from the seeds.
+    default_seeds:
+        If no seeds are provided, the default_seeds are the training
+        set of the
+        `SQuAD V1.0 dataset <https://rajpurkar.github.io/SQuAD-explorer/>`_.
 
-    Examples::
-
-        generator = AddSentGenerator()
-        examples = generator(num_epochs=1)
-
-    .. _`Adversarial Examples for Evaluating Reading Comprehension Systems`:
-        http://arxiv.org/abs/1707.07328
     """
     def __init__(self,
                  alteration_strategy: str = 'high-conf',
@@ -163,7 +154,7 @@ class AddSentGenerator(Generator):
 
     def generate_from_seed(self, seed: Tuple):
         r"""Edit a SQuAD example using rules. """
-        qas, paragraph, title = seed
+        qas, paragraph = seed
         question = qas['question'].strip()
         if not self.quiet:
             print(f"Question: {question}")

@@ -23,16 +23,29 @@ logger = logging.getLogger(__name__)
 
 class SwagGenerator(Generator):
     """
-    ``SwagGenerator`` create adversarial examples using the method described in
+    ``SwagGenerator`` inherit from the ``Generator`` class.
+    This ``Generator`` generate adversarial examples from seeds using
+    the method described in
     `SWAG: A Large-Scale Adversarial Dataset for Grounded Commonsense Inference <http://arxiv.org/abs/1808.05326>`_.
-    The method goes schematically as follows:
-    - For a pair of sequential sentence (ex: video captions), the second sentence is split into noun and verb phrases.
-    - A language model generates many negative ending
 
-    Parameters
-    ----------
-    num_examples : int, optional (default = 10)
-        Number of adversarial examples to generate at each self.generate() call.
+    This method goes schematically as follows:
+    - In a seed sample containing a pair of sequential sentence (ex: video captions),
+        the second sentence is split into noun and verb phrases.
+    - A language model generates several possible endings from the sencond sentence noun phrase.
+
+    Args, input and yield:
+        See the ``Generator`` class.
+
+    Seeds:
+        AllenNLP ``Instance`` containing two ``TextField``:
+        `first_sentence` and `first_sentence`, respectively containing
+        first and the second consecutive sentences.
+
+    default_seeds:
+        If no seeds are provided, the default_seeds are the training set
+        of the
+        `ActivityNet Captions dataset <https://cs.stanford.edu/people/ranjaykrishna/densevid/>`_.
+
     """
     def __init__(self,
                  default_seeds: Iterable = None,
